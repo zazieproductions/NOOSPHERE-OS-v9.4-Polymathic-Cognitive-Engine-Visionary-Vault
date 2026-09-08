@@ -1,4 +1,13 @@
-export type WindowId = 
+/**
+ * NOOSPHERE-OS Core Type Definitions
+ * Polymathic Cognitive Engine — type-safe domain model
+ */
+
+// ============================================================================
+// Window System
+// ============================================================================
+
+export type WindowId =
   | 'graph'
   | 'vault'
   | 'synthesizer'
@@ -10,22 +19,37 @@ export type WindowId =
   | 'audioLab'
   | 'settings';
 
+export interface WindowPosition {
+  x: number;
+  y: number;
+}
+
+export interface WindowSize {
+  width: number;
+  height: number;
+}
+
 export interface WindowState {
   id: WindowId;
   title: string;
   subtitle?: string;
+  /** Lucide icon name or semantic key */
   icon: string;
   isOpen: boolean;
   isMinimized: boolean;
   isMaximized: boolean;
-  position: { x: number; y: number };
-  size: { width: number; height: number };
+  position: WindowPosition;
+  size: WindowSize;
   zIndex: number;
   badge?: string;
   category?: string;
 }
 
-export type NodeCategory = 
+// ============================================================================
+// Knowledge Graph
+// ============================================================================
+
+export type NodeCategory =
   | 'semiotics'
   | 'hypergrowth'
   | 'cybernetics'
@@ -40,19 +64,26 @@ export interface GraphNode {
   id: string;
   label: string;
   category: NodeCategory;
+  /** One-line epistemic summary */
   summary: string;
+  /** Academic / historical context */
   epistemicContext: string;
-  cognitiveWeight: number; // 1 to 10 scale
+  /** Cognitive weight 1-10 */
+  cognitiveWeight: number;
   tags: string[];
-  connections: string[]; // Node IDs
+  /** Connected node IDs */
+  connections: string[];
   hexColor: string;
+  // Force simulation (optional, populated at runtime)
   x?: number;
   y?: number;
   vx?: number;
   vy?: number;
   fx?: number | null;
   fy?: number | null;
+  // Optional enrichment
   quote?: string;
+  /** Tactical GTM application */
   applicationVector?: string;
 }
 
@@ -63,22 +94,33 @@ export interface GraphLink {
   type?: 'synergistic' | 'dialectical' | 'recursive' | 'subversive';
 }
 
+// ============================================================================
+// Vault / Notes
+// ============================================================================
+
 export interface VaultNote {
   id: string;
   title: string;
   category: NodeCategory;
-  cognitiveDensity: number; // 1 - 100
+  /** 1-100 */
+  cognitiveDensity: number;
   readTime: string;
   tags: string[];
   dateCreated: string;
   excerpt: string;
+  /** Full markdown content */
   content: string;
-  backlinks: string[]; // Titles or IDs of linked notes
+  /** Backlink titles or IDs */
+  backlinks: string[];
   relatedNodeId?: string;
   isPinned?: boolean;
   isFavorite?: boolean;
   authorNote?: string;
 }
+
+// ============================================================================
+// Synthesis Engine
+// ============================================================================
 
 export interface SynthesisResult {
   id: string;
@@ -89,12 +131,30 @@ export interface SynthesisResult {
   semioticDeconstruction: string;
   gtmVector: string;
   targetPsychographic: string;
-  viralityIndex: number; // 1 - 100
+  /** 1-100 */
+  viralityIndex: number;
   hexPalette: string[];
   tweetStorm: string[];
   provocativeManifesto: string;
   aiPromptRecipe: string;
   marketFrictionRating: string;
+}
+
+export interface RealityDistortionPayload {
+  esoteric: string;
+  framework: string;
+  keyAxiom: string;
+}
+
+// ============================================================================
+// Chromatic Lab
+// ============================================================================
+
+export interface ChromaticColor {
+  hex: string;
+  name: string;
+  role: string;
+  psychographic: string;
 }
 
 export interface ChromaticPalette {
@@ -103,15 +163,14 @@ export interface ChromaticPalette {
   vibe: string;
   description: string;
   archetype: string;
-  colors: {
-    hex: string;
-    name: string;
-    role: string;
-    psychographic: string;
-  }[];
+  colors: ChromaticColor[];
   contrastScore: string;
   recommendedAudience: string;
 }
+
+// ============================================================================
+// Oracle & Campaign
+// ============================================================================
 
 export interface OracleQuote {
   id: string;
@@ -136,6 +195,24 @@ export interface CampaignMilestone {
   tags: string[];
 }
 
+// ============================================================================
+// OS Configuration
+// ============================================================================
+
 export type OSTheme = 'obsidian' | 'matrix' | 'alchemical' | 'brutalist' | 'ultraviolet';
 export type WallpaperMode = 'neural' | 'matrixRain' | 'cyberGrid' | 'topological' | 'deepVoid';
 export type WorkspacePreset = 'grandMatrix' | 'deepGraph' | 'synthesisStudio' | 'zenReader' | 'commandDeck';
+
+// ============================================================================
+// Utility
+// ============================================================================
+
+export type DeepPartial<T> = {
+  [P in keyof T]?: T[P] extends object ? DeepPartial<T[P]> : T[P];
+};
+
+export interface SearchResult<T> {
+  item: T;
+  score: number;
+  matchedFields: string[];
+}

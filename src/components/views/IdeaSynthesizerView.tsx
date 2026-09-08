@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import confetti from 'canvas-confetti';
-import { GraphNode, SynthesisResult } from '../types';
-import { INITIAL_GRAPH_NODES } from '../data/graphNodes';
-import { synthesizeConcepts } from '../services/synthesisEngine';
-import { audioEngine } from '../services/audioEngine';
+import { GraphNode, SynthesisResult } from '../../types';
+import { INITIAL_GRAPH_NODES } from '../../data/graphNodes';
+import { synthesizeConcepts } from '../../services/synthesisEngine';
+import { audioEngine } from '../../services/audioEngine';
 import { 
   Sparkles, 
   Flame, 

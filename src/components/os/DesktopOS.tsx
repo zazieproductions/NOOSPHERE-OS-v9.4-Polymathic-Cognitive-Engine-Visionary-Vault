@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import confetti from 'canvas-confetti';
-import { WindowId, WindowState, WorkspacePreset, WallpaperMode, GraphNode, VaultNote } from '../types';
-import { INITIAL_GRAPH_NODES } from '../data/graphNodes';
-import { VAULT_NOTES } from '../data/vaultNotes';
-import { audioEngine } from '../services/audioEngine';
+import type { WindowId, WindowState, WorkspacePreset, WallpaperMode, GraphNode } from '../../types';
+import { INITIAL_GRAPH_NODES } from '../../data/graphNodes';
+import { VAULT_NOTES } from '../../data/vaultNotes';
+import { audioEngine } from '../../services/audioEngine';
+import { config } from '../../lib/config';
 
 import { WallpaperCanvas } from './WallpaperCanvas';
 import { TopStatusBar } from './TopStatusBar';
@@ -11,17 +12,17 @@ import { DockBar } from './DockBar';
 import { WindowFrame } from './WindowFrame';
 import { OmniSearchModal } from './OmniSearchModal';
 
-import { NeuralGraphView } from './NeuralGraphView';
-import { VaultNotesView } from './VaultNotesView';
-import { IdeaSynthesizerView } from './IdeaSynthesizerView';
-import { RealityDistortionView } from './RealityDistortionView';
-import { HexChromaticLab } from './HexChromaticLab';
-import { ChronotopeTimelineView } from './ChronotopeTimelineView';
-import { TerminalView } from './TerminalView';
+import { NeuralGraphView } from '../views/NeuralGraphView';
+import { VaultNotesView } from '../views/VaultNotesView';
+import { IdeaSynthesizerView } from '../views/IdeaSynthesizerView';
+import { RealityDistortionView } from '../views/RealityDistortionView';
+import { HexChromaticLab } from '../views/HexChromaticLab';
+import { ChronotopeTimelineView } from '../views/ChronotopeTimelineView';
+import { TerminalView } from '../views/TerminalView';
 
 export const DesktopOS: React.FC = () => {
   const [topZIndex, setTopZIndex] = useState(10);
-  const [wallpaperMode, setWallpaperMode] = useState<WallpaperMode>('neural');
+  const [wallpaperMode, setWallpaperMode] = useState<WallpaperMode>(config.wallpaper.defaultMode);
   const [activePreset, setActivePreset] = useState<WorkspacePreset>('grandMatrix');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
@@ -29,7 +30,7 @@ export const DesktopOS: React.FC = () => {
   const [synthesizerNodes, setSynthesizerNodes] = useState<GraphNode[]>([
     INITIAL_GRAPH_NODES[0],
     INITIAL_GRAPH_NODES[5],
-    INITIAL_GRAPH_NODES[16]
+    INITIAL_GRAPH_NODES[16],
   ]);
   const [activeVaultNoteId, setActiveVaultNoteId] = useState<string>(VAULT_NOTES[0].id);
 
@@ -153,102 +154,74 @@ export const DesktopOS: React.FC = () => {
       position: { x: 320, y: 160 },
       size: { width: 450, height: 350 },
       zIndex: 1,
-    }
+    },
   };
 
   const [windows, setWindows] = useState<Record<WindowId, WindowState>>(initialWindows);
 
-  // Bring window to front
   const focusWindow = useCallback((id: WindowId) => {
-    setTopZIndex((prevZ) => {
+    setTopZIndex(prevZ => {
       const nextZ = prevZ + 1;
-      setWindows((prev) => ({
+      setWindows(prev => ({
         ...prev,
-        [id]: {
-          ...prev[id],
-          isOpen: true,
-          isMinimized: false,
-          zIndex: nextZ,
-        },
+        [id]: { ...prev[id], isOpen: true, isMinimized: false, zIndex: nextZ },
       }));
       return nextZ;
     });
   }, []);
 
   const closeWindow = useCallback((id: WindowId) => {
-    setWindows((prev) => ({
-      ...prev,
-      [id]: { ...prev[id], isOpen: false },
-    }));
+    setWindows(prev => ({ ...prev, [id]: { ...prev[id], isOpen: false } }));
   }, []);
 
   const minimizeWindow = useCallback((id: WindowId) => {
-    setWindows((prev) => ({
-      ...prev,
-      [id]: { ...prev[id], isMinimized: true },
-    }));
+    setWindows(prev => ({ ...prev, [id]: { ...prev[id], isMinimized: true } }));
   }, []);
 
   const toggleMaximizeWindow = useCallback((id: WindowId) => {
-    setWindows((prev) => ({
+    setWindows(prev => ({
       ...prev,
       [id]: { ...prev[id], isMaximized: !prev[id].isMaximized },
     }));
   }, []);
 
-  const toggleWindow = useCallback((id: WindowId) => {
-    setWindows((prev) => {
-      const win = prev[id];
-      if (!win.isOpen) {
-        return {
-          ...prev,
-          [id]: { ...win, isOpen: true, isMinimized: false, zIndex: topZIndex + 1 },
-        };
-      } else if (win.isMinimized) {
-        return {
-          ...prev,
-          [id]: { ...win, isMinimized: false, zIndex: topZIndex + 1 },
-        };
-      } else {
-        return {
-          ...prev,
-          [id]: { ...win, isMinimized: true },
-        };
-      }
-    });
-    setTopZIndex((z) => z + 1);
-  }, [topZIndex]);
+  const toggleWindow = useCallback(
+    (id: WindowId) => {
+      setWindows(prev => {
+        const win = prev[id];
+        if (!win.isOpen) {
+          return { ...prev, [id]: { ...win, isOpen: true, isMinimized: false, zIndex: topZIndex + 1 } };
+        } else if (win.isMinimized) {
+          return { ...prev, [id]: { ...win, isMinimized: false, zIndex: topZIndex + 1 } };
+        } else {
+          return { ...prev, [id]: { ...win, isMinimized: true } };
+        }
+      });
+      setTopZIndex(z => z + 1);
+    },
+    [topZIndex]
+  );
 
   const updatePosition = useCallback((id: WindowId, pos: { x: number; y: number }) => {
-    setWindows((prev) => ({
-      ...prev,
-      [id]: { ...prev[id], position: pos },
-    }));
+    setWindows(prev => ({ ...prev, [id]: { ...prev[id], position: pos } }));
   }, []);
 
   const updateSize = useCallback((id: WindowId, size: { width: number; height: number }) => {
-    setWindows((prev) => ({
-      ...prev,
-      [id]: { ...prev[id], size },
-    }));
+    setWindows(prev => ({ ...prev, [id]: { ...prev[id], size } }));
   }, []);
 
-  // Presets Application
   const applyPreset = useCallback((preset: WorkspacePreset) => {
     setActivePreset(preset);
     const screenW = window.innerWidth;
     const screenH = window.innerHeight;
 
-    setWindows((prev) => {
+    setWindows(prev => {
       const updated = { ...prev };
-
-      // Hide all first
-      Object.keys(updated).forEach((k) => {
+      Object.keys(updated).forEach(k => {
         updated[k as WindowId] = { ...updated[k as WindowId], isOpen: false, isMaximized: false };
       });
 
       if (preset === 'grandMatrix') {
-        // Graph left, Notes right
         updated.graph = {
           ...updated.graph,
           isOpen: true,
@@ -266,13 +239,7 @@ export const DesktopOS: React.FC = () => {
           zIndex: 11,
         };
       } else if (preset === 'deepGraph') {
-        updated.graph = {
-          ...updated.graph,
-          isOpen: true,
-          isMinimized: false,
-          isMaximized: true,
-          zIndex: 15,
-        };
+        updated.graph = { ...updated.graph, isOpen: true, isMinimized: false, isMaximized: true, zIndex: 15 };
       } else if (preset === 'synthesisStudio') {
         updated.synthesizer = {
           ...updated.synthesizer,
@@ -330,9 +297,8 @@ export const DesktopOS: React.FC = () => {
     });
   }, []);
 
-  // Send concept from graph to synthesizer
   const handleSelectNodeForSynthesis = (node: GraphNode) => {
-    setSynthesizerNodes((prev) => {
+    setSynthesizerNodes(prev => {
       if (prev.some(n => n.id === node.id)) return prev;
       return [...prev.slice(0, 3), node];
     });
@@ -340,7 +306,6 @@ export const DesktopOS: React.FC = () => {
     audioEngine.playEurekaChord();
   };
 
-  // Open note from graph or wikilink
   const handleOpenVaultNote = (nodeId: string) => {
     const matchedNote = VAULT_NOTES.find(n => n.relatedNodeId === nodeId || n.id === nodeId);
     if (matchedNote) {
@@ -349,24 +314,23 @@ export const DesktopOS: React.FC = () => {
     focusWindow('vault');
   };
 
-  // Global Eureka breakthrough
   const handleTriggerEureka = () => {
-    audioEngine.playEurekaChord();
-    confetti({
-      particleCount: 100,
-      spread: 100,
-      origin: { y: 0.5 },
-      colors: ['#10b981', '#06b6d4', '#f59e0b', '#ec4899', '#8b5cf6']
-    });
+    if (config.features.confettiEnabled) {
+      audioEngine.playEurekaChord();
+      confetti({
+        particleCount: 100,
+        spread: 100,
+        origin: { y: 0.5 },
+        colors: ['#10b981', '#06b6d4', '#f59e0b', '#ec4899', '#8b5cf6'],
+      });
+    }
     focusWindow('distortion');
   };
 
   return (
     <div className="relative w-screen h-screen overflow-hidden bg-[#050608] select-none font-mono-code flex flex-col">
-      {/* Dynamic Interactive Animated Wallpaper Canvas */}
       <WallpaperCanvas mode={wallpaperMode} />
 
-      {/* Top Status Bar with Live Telemetry */}
       <TopStatusBar
         onOpenSearch={() => setIsSearchOpen(true)}
         wallpaperMode={wallpaperMode}
@@ -376,135 +340,48 @@ export const DesktopOS: React.FC = () => {
         onOpenWindow={focusWindow}
       />
 
-      {/* OS Desktop Workspace Area */}
       <main className="flex-1 relative w-full h-full overflow-hidden">
-        {/* Window 1: Neural Graph View */}
-        <WindowFrame
-          window={windows.graph}
-          onClose={closeWindow}
-          onMinimize={minimizeWindow}
-          onMaximize={toggleMaximizeWindow}
-          onFocus={focusWindow}
-          onUpdatePosition={updatePosition}
-          onUpdateSize={updateSize}
-        >
-          <NeuralGraphView
-            onSelectNodeForSynthesis={handleSelectNodeForSynthesis}
-            onOpenVaultNote={handleOpenVaultNote}
-          />
+        <WindowFrame window={windows.graph} onClose={closeWindow} onMinimize={minimizeWindow} onMaximize={toggleMaximizeWindow} onFocus={focusWindow} onUpdatePosition={updatePosition} onUpdateSize={updateSize}>
+          <NeuralGraphView onSelectNodeForSynthesis={handleSelectNodeForSynthesis} onOpenVaultNote={handleOpenVaultNote} />
         </WindowFrame>
 
-        {/* Window 2: Notes Vault */}
-        <WindowFrame
-          window={windows.vault}
-          onClose={closeWindow}
-          onMinimize={minimizeWindow}
-          onMaximize={toggleMaximizeWindow}
-          onFocus={focusWindow}
-          onUpdatePosition={updatePosition}
-          onUpdateSize={updateSize}
-        >
-          <VaultNotesView
-            initialNoteId={activeVaultNoteId}
-            onJumpToNode={(nodeId) => {
-              focusWindow('graph');
-            }}
-            onSynthesizeFromNote={(note) => {
-              focusWindow('synthesizer');
-            }}
-          />
+        <WindowFrame window={windows.vault} onClose={closeWindow} onMinimize={minimizeWindow} onMaximize={toggleMaximizeWindow} onFocus={focusWindow} onUpdatePosition={updatePosition} onUpdateSize={updateSize}>
+          <VaultNotesView initialNoteId={activeVaultNoteId} onJumpToNode={() => focusWindow('graph')} onSynthesizeFromNote={() => focusWindow('synthesizer')} />
         </WindowFrame>
 
-        {/* Window 3: Idea Synthesizer / Concept Collider */}
-        <WindowFrame
-          window={windows.synthesizer}
-          onClose={closeWindow}
-          onMinimize={minimizeWindow}
-          onMaximize={toggleMaximizeWindow}
-          onFocus={focusWindow}
-          onUpdatePosition={updatePosition}
-          onUpdateSize={updateSize}
-        >
+        <WindowFrame window={windows.synthesizer} onClose={closeWindow} onMinimize={minimizeWindow} onMaximize={toggleMaximizeWindow} onFocus={focusWindow} onUpdatePosition={updatePosition} onUpdateSize={updateSize}>
           <IdeaSynthesizerView initialNodes={synthesizerNodes} />
         </WindowFrame>
 
-        {/* Window 4: Reality Distortion & LARP Simulator */}
-        <WindowFrame
-          window={windows.distortion}
-          onClose={closeWindow}
-          onMinimize={minimizeWindow}
-          onMaximize={toggleMaximizeWindow}
-          onFocus={focusWindow}
-          onUpdatePosition={updatePosition}
-          onUpdateSize={updateSize}
-        >
+        <WindowFrame window={windows.distortion} onClose={closeWindow} onMinimize={minimizeWindow} onMaximize={toggleMaximizeWindow} onFocus={focusWindow} onUpdatePosition={updatePosition} onUpdateSize={updateSize}>
           <RealityDistortionView />
         </WindowFrame>
 
-        {/* Window 5: Hex Chromatic Lab */}
-        <WindowFrame
-          window={windows.chromatic}
-          onClose={closeWindow}
-          onMinimize={minimizeWindow}
-          onMaximize={toggleMaximizeWindow}
-          onFocus={focusWindow}
-          onUpdatePosition={updatePosition}
-          onUpdateSize={updateSize}
-        >
+        <WindowFrame window={windows.chromatic} onClose={closeWindow} onMinimize={minimizeWindow} onMaximize={toggleMaximizeWindow} onFocus={focusWindow} onUpdatePosition={updatePosition} onUpdateSize={updateSize}>
           <HexChromaticLab />
         </WindowFrame>
 
-        {/* Window 6: The Chronotope Campaign Timeline */}
-        <WindowFrame
-          window={windows.chronotope}
-          onClose={closeWindow}
-          onMinimize={minimizeWindow}
-          onMaximize={toggleMaximizeWindow}
-          onFocus={focusWindow}
-          onUpdatePosition={updatePosition}
-          onUpdateSize={updateSize}
-        >
+        <WindowFrame window={windows.chronotope} onClose={closeWindow} onMinimize={minimizeWindow} onMaximize={toggleMaximizeWindow} onFocus={focusWindow} onUpdatePosition={updatePosition} onUpdateSize={updateSize}>
           <ChronotopeTimelineView />
         </WindowFrame>
 
-        {/* Window 7: synapse-cli Terminal */}
-        <WindowFrame
-          window={windows.terminal}
-          onClose={closeWindow}
-          onMinimize={minimizeWindow}
-          onMaximize={toggleMaximizeWindow}
-          onFocus={focusWindow}
-          onUpdatePosition={updatePosition}
-          onUpdateSize={updateSize}
-        >
+        <WindowFrame window={windows.terminal} onClose={closeWindow} onMinimize={minimizeWindow} onMaximize={toggleMaximizeWindow} onFocus={focusWindow} onUpdatePosition={updatePosition} onUpdateSize={updateSize}>
           <TerminalView />
         </WindowFrame>
       </main>
 
-      {/* Floating Bottom Dock Bar */}
-      <DockBar
-        windows={windows}
-        onToggleWindow={toggleWindow}
-        onTriggerEureka={handleTriggerEureka}
-      />
+      <DockBar windows={windows} onToggleWindow={toggleWindow} onTriggerEureka={handleTriggerEureka} />
 
-      {/* Omni-Search Cmd+K Command Palette */}
       <OmniSearchModal
         isOpen={isSearchOpen}
         onClose={() => setIsSearchOpen(false)}
-        onSelectNode={(node) => {
-          handleSelectNodeForSynthesis(node);
-        }}
-        onSelectNote={(noteId) => {
+        onSelectNode={handleSelectNodeForSynthesis}
+        onSelectNote={noteId => {
           setActiveVaultNoteId(noteId);
           focusWindow('vault');
         }}
-        onSelectPalette={() => {
-          focusWindow('chromatic');
-        }}
-        onOpenWindow={(id) => {
-          focusWindow(id);
-        }}
+        onSelectPalette={() => focusWindow('chromatic')}
+        onOpenWindow={id => focusWindow(id)}
         onTriggerEureka={handleTriggerEureka}
       />
     </div>

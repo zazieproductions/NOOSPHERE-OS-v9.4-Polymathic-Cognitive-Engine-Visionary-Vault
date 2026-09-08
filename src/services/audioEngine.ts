@@ -1,132 +1,171 @@
-// Web Audio API Polymath Sound Engine
-// Binaural theta waves, synaptic clicks, eureka chimes, cybernetic drones
+/**
+ * Polymath Audio Engine — Web Audio API
+ * Binaural theta waves (6Hz @ 216Hz carrier), synaptic clicks, eureka chimes
+ *
+ * Design notes:
+ * - Lazy-initialized AudioContext to respect autoplay policies
+ * - Master gain for global mute
+ * - Graceful degradation when WebAudio unavailable
+ * - No external dependencies
+ */
+
+import { AUDIO } from '../lib/constants';
+
+type OscillatorType = globalThis.OscillatorType;
 
 class PolymathAudioEngine {
   private ctx: AudioContext | null = null;
-  private isMuted: boolean = false;
-  private isBinauralActive: boolean = false;
+  private isMuted = false;
+  private isBinauralActive = false;
   private binauralLeftOsc: OscillatorNode | null = null;
   private binauralRightOsc: OscillatorNode | null = null;
   private binauralGain: GainNode | null = null;
   private masterGain: GainNode | null = null;
 
-  private initContext() {
-    if (!this.ctx) {
-      const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+  private initContext(): AudioContext | null {
+    if (this.ctx) {
+      if (this.ctx.state === 'suspended') {
+        this.ctx.resume().catch(() => {});
+      }
+      return this.ctx;
+    }
+
+    try {
+      const AudioCtx =
+        window.AudioContext ||
+        (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+      if (!AudioCtx) {
+        console.warn('[AudioEngine] Web Audio API not supported');
+        return null;
+      }
       this.ctx = new AudioCtx();
       this.masterGain = this.ctx.createGain();
-      this.masterGain.gain.setValueAtTime(0.7, this.ctx.currentTime);
+      this.masterGain.gain.setValueAtTime(this.isMuted ? 0 : AUDIO.MASTER_GAIN, this.ctx.currentTime);
       this.masterGain.connect(this.ctx.destination);
-    }
-    if (this.ctx.state === 'suspended') {
-      this.ctx.resume();
+      return this.ctx;
+    } catch (err) {
+      console.warn('[AudioEngine] Failed to initialize AudioContext:', err);
+      return null;
     }
   }
 
-  public setMuted(muted: boolean) {
+  public setMuted(muted: boolean): void {
     this.isMuted = muted;
     if (this.masterGain && this.ctx) {
-      this.masterGain.gain.setValueAtTime(muted ? 0 : 0.7, this.ctx.currentTime);
+      try {
+        this.masterGain.gain.setValueAtTime(muted ? 0 : AUDIO.MASTER_GAIN, this.ctx.currentTime);
+      } catch {
+        // ignore
+      }
     }
     if (muted && this.isBinauralActive) {
       this.stopThetaBinaural();
     }
   }
 
-  public getMuted() {
+  public getMuted(): boolean {
     return this.isMuted;
   }
 
-  public getBinauralActive() {
+  public getBinauralActive(): boolean {
     return this.isBinauralActive;
   }
 
-  // Play subtle mechanical / holographic synaptic click
-  public playSynapticClick(frequency = 1200, type: OscillatorType = 'sine') {
+  /**
+   * Subtle mechanical / holographic synaptic click
+   */
+  public playSynapticClick(frequency = 1200, type: OscillatorType = 'sine'): void {
     if (this.isMuted) return;
     try {
-      this.initContext();
-      if (!this.ctx || !this.masterGain) return;
+      const ctx = this.initContext();
+      if (!ctx || !this.masterGain) return;
 
-      const osc = this.ctx.createOscillator();
-      const gain = this.ctx.createGain();
-      
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
       osc.type = type;
-      osc.frequency.setValueAtTime(frequency, this.ctx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(frequency * 0.4, this.ctx.currentTime + 0.04);
+      osc.frequency.setValueAtTime(frequency, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(frequency * 0.4, ctx.currentTime + AUDIO.CLICK_DURATION);
 
-      gain.gain.setValueAtTime(0.08, this.ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + 0.04);
+      gain.gain.setValueAtTime(0.08, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + AUDIO.CLICK_DURATION);
 
       osc.connect(gain);
       gain.connect(this.masterGain);
 
       osc.start();
-      osc.stop(this.ctx.currentTime + 0.04);
+      osc.stop(ctx.currentTime + AUDIO.CLICK_DURATION);
     } catch {
-      // Audio fallback silent
+      // silent fallback
     }
   }
 
-  // Play sci-fi UI blip / node focus tone
-  public playNodeBlip(freq = 640) {
+  /**
+   * Sci-fi UI blip for node focus
+   */
+  public playNodeBlip(freq = 640): void {
     if (this.isMuted) return;
     try {
-      this.initContext();
-      if (!this.ctx || !this.masterGain) return;
+      const ctx = this.initContext();
+      if (!ctx || !this.masterGain) return;
 
-      const osc = this.ctx.createOscillator();
-      const gain = this.ctx.createGain();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
 
       osc.type = 'triangle';
-      osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(freq * 1.5, this.ctx.currentTime + 0.08);
+      osc.frequency.setValueAtTime(freq, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(freq * 1.5, ctx.currentTime + AUDIO.BLIP_DURATION);
 
-      gain.gain.setValueAtTime(0.12, this.ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.09);
+      gain.gain.setValueAtTime(0.12, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + AUDIO.BLIP_DURATION);
 
       osc.connect(gain);
       gain.connect(this.masterGain);
 
       osc.start();
-      osc.stop(this.ctx.currentTime + 0.09);
+      osc.stop(ctx.currentTime + AUDIO.BLIP_DURATION);
     } catch {
-      // Audio error fallback
+      // silent fallback
     }
   }
 
-  // Play glorious Eureka! / Alchemical Breakthrough chord
-  public playEurekaChord() {
+  /**
+   * Glorious Eureka! / Alchemical Breakthrough chord — Solfeggio harmonic series
+   */
+  public playEurekaChord(): void {
     if (this.isMuted) return;
     try {
-      this.initContext();
-      if (!this.ctx || !this.masterGain) return;
+      const ctx = this.initContext();
+      if (!ctx || !this.masterGain) return;
 
-      const chords = [528, 660, 792, 1056, 1320]; // 528Hz Solfeggio miracle tone harmonic series
+      const chords = [528, 660, 792, 1056, 1320]; // 528Hz Solfeggio miracle tone
       chords.forEach((freq, idx) => {
-        if (!this.ctx || !this.masterGain) return;
-        const osc = this.ctx.createOscillator();
-        const gain = this.ctx.createGain();
+        if (!ctx || !this.masterGain) return;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
 
         osc.type = 'sine';
-        osc.frequency.setValueAtTime(freq, this.ctx.currentTime + idx * 0.06);
+        osc.frequency.setValueAtTime(freq, ctx.currentTime + idx * 0.06);
 
-        gain.gain.setValueAtTime(0.0001, this.ctx.currentTime + idx * 0.06);
-        gain.gain.linearRampToValueAtTime(0.15 / (idx + 1), this.ctx.currentTime + idx * 0.06 + 0.08);
-        gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + idx * 0.06 + 1.8);
+        gain.gain.setValueAtTime(0.0001, ctx.currentTime + idx * 0.06);
+        gain.gain.linearRampToValueAtTime(0.15 / (idx + 1), ctx.currentTime + idx * 0.06 + 0.08);
+        gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + idx * 0.06 + 1.8);
 
         osc.connect(gain);
         gain.connect(this.masterGain);
 
-        osc.start(this.ctx.currentTime + idx * 0.06);
-        osc.stop(this.ctx.currentTime + idx * 0.06 + 1.9);
+        osc.start(ctx.currentTime + idx * 0.06);
+        osc.stop(ctx.currentTime + idx * 0.06 + 1.9);
       });
     } catch {
-      // Ignore
+      // ignore
     }
   }
 
-  // Toggle Binaural Theta Wave (6Hz beat at 216Hz carrier: stimulates deep creative subconscious polymath state)
+  /**
+   * Toggle Binaural Theta Wave (6Hz beat at 216Hz carrier)
+   * Stimulates deep creative subconscious polymath state
+   */
   public toggleThetaBinaural(): boolean {
     if (this.isBinauralActive) {
       this.stopThetaBinaural();
@@ -137,39 +176,36 @@ class PolymathAudioEngine {
     }
   }
 
-  public startThetaBinaural() {
+  public startThetaBinaural(): void {
     if (this.isMuted) return;
     try {
-      this.initContext();
-      if (!this.ctx || !this.masterGain) return;
+      const ctx = this.initContext();
+      if (!ctx || !this.masterGain) return;
 
-      this.stopThetaBinaural(); // Clean up if running
+      this.stopThetaBinaural();
 
-      const carrier = 216; // Sacred tuning carrier
-      const thetaBeat = 6.0; // 6Hz theta brainwave
+      const carrier = AUDIO.BINAURAL_CARRIER;
+      const thetaBeat = AUDIO.BINAURAL_BEAT;
 
-      // Left Channel
-      const leftPanner = this.ctx.createStereoPanner ? this.ctx.createStereoPanner() : null;
-      if (leftPanner) leftPanner.pan.setValueAtTime(-1, this.ctx.currentTime);
-      const leftOsc = this.ctx.createOscillator();
+      const leftPanner = ctx.createStereoPanner ? ctx.createStereoPanner() : null;
+      if (leftPanner) leftPanner.pan.setValueAtTime(-1, ctx.currentTime);
+      const leftOsc = ctx.createOscillator();
       leftOsc.type = 'sine';
-      leftOsc.frequency.setValueAtTime(carrier, this.ctx.currentTime);
+      leftOsc.frequency.setValueAtTime(carrier, ctx.currentTime);
 
-      // Right Channel
-      const rightPanner = this.ctx.createStereoPanner ? this.ctx.createStereoPanner() : null;
-      if (rightPanner) rightPanner.pan.setValueAtTime(1, this.ctx.currentTime);
-      const rightOsc = this.ctx.createOscillator();
+      const rightPanner = ctx.createStereoPanner ? ctx.createStereoPanner() : null;
+      if (rightPanner) rightPanner.pan.setValueAtTime(1, ctx.currentTime);
+      const rightOsc = ctx.createOscillator();
       rightOsc.type = 'sine';
-      rightOsc.frequency.setValueAtTime(carrier + thetaBeat, this.ctx.currentTime);
+      rightOsc.frequency.setValueAtTime(carrier + thetaBeat, ctx.currentTime);
 
-      const gain = this.ctx.createGain();
-      gain.gain.setValueAtTime(0.001, this.ctx.currentTime);
-      gain.gain.linearRampToValueAtTime(0.06, this.ctx.currentTime + 2.0); // Gentle fade-in
+      const gain = ctx.createGain();
+      gain.gain.setValueAtTime(0.001, ctx.currentTime);
+      gain.gain.linearRampToValueAtTime(0.06, ctx.currentTime + 2.0);
 
       if (leftPanner && rightPanner) {
         leftOsc.connect(leftPanner);
         leftPanner.connect(gain);
-
         rightOsc.connect(rightPanner);
         rightPanner.connect(gain);
       } else {
@@ -186,35 +222,50 @@ class PolymathAudioEngine {
       this.binauralRightOsc = rightOsc;
       this.binauralGain = gain;
       this.isBinauralActive = true;
-    } catch {
+    } catch (err) {
+      console.warn('[AudioEngine] Failed to start binaural:', err);
       this.isBinauralActive = false;
     }
   }
 
-  public stopThetaBinaural() {
+  public stopThetaBinaural(): void {
     try {
       if (this.binauralGain && this.ctx) {
         this.binauralGain.gain.linearRampToValueAtTime(0.0001, this.ctx.currentTime + 0.8);
       }
       setTimeout(() => {
-        if (this.binauralLeftOsc) {
-          this.binauralLeftOsc.stop();
-          this.binauralLeftOsc.disconnect();
-          this.binauralLeftOsc = null;
-        }
-        if (this.binauralRightOsc) {
-          this.binauralRightOsc.stop();
-          this.binauralRightOsc.disconnect();
-          this.binauralRightOsc = null;
-        }
-        if (this.binauralGain) {
-          this.binauralGain.disconnect();
-          this.binauralGain = null;
+        try {
+          if (this.binauralLeftOsc) {
+            this.binauralLeftOsc.stop();
+            this.binauralLeftOsc.disconnect();
+            this.binauralLeftOsc = null;
+          }
+          if (this.binauralRightOsc) {
+            this.binauralRightOsc.stop();
+            this.binauralRightOsc.disconnect();
+            this.binauralRightOsc = null;
+          }
+          if (this.binauralGain) {
+            this.binauralGain.disconnect();
+            this.binauralGain = null;
+          }
+        } catch {
+          // ignore cleanup errors
         }
       }, 850);
       this.isBinauralActive = false;
     } catch {
       this.isBinauralActive = false;
+    }
+  }
+
+  /** Dispose all resources — call on app unmount */
+  public dispose(): void {
+    this.stopThetaBinaural();
+    if (this.ctx) {
+      this.ctx.close().catch(() => {});
+      this.ctx = null;
+      this.masterGain = null;
     }
   }
 }

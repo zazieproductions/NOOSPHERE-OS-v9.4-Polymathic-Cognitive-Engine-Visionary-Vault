@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { OSTheme, WallpaperMode, WorkspacePreset } from '../types';
-import { audioEngine } from '../services/audioEngine';
+import { OSTheme, WallpaperMode, WorkspacePreset } from '../../types';
+import { audioEngine } from '../../services/audioEngine';
 import { 
   Sparkles, 
   Volume2, 

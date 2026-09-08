@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { INITIAL_GRAPH_NODES } from '../data/graphNodes';
-import { VAULT_NOTES } from '../data/vaultNotes';
-import { CHROMATIC_PALETTES } from '../data/palettes';
-import { audioEngine } from '../services/audioEngine';
+import { INITIAL_GRAPH_NODES } from '../../data/graphNodes';
+import { VAULT_NOTES } from '../../data/vaultNotes';
+import { CHROMATIC_PALETTES } from '../../data/palettes';
+import { audioEngine } from '../../services/audioEngine';
 import { 
   Search, 
   Network, 

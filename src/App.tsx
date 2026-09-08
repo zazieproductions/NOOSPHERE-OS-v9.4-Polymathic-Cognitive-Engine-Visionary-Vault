@@ -1,7 +1,11 @@
 import React from 'react';
-import { DesktopOS } from './components/DesktopOS';
+import { DesktopOS } from './components/os/DesktopOS';
 
-function App() {
+/**
+ * NOOSPHERE-OS v9.4 Root
+ * Polymathic Cognitive Engine & Visionary Vault
+ */
+function App(): React.JSX.Element {
   return <DesktopOS />;
 }
 

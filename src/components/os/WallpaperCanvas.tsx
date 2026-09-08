@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { WallpaperMode } from '../types';
+import { WallpaperMode } from '../../types';
 
 interface WallpaperCanvasProps {
   mode: WallpaperMode;

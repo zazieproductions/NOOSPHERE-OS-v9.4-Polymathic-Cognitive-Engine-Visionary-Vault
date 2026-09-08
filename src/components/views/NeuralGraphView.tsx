@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { GraphNode, NodeCategory } from '../types';
-import { INITIAL_GRAPH_NODES, CATEGORY_COLORS } from '../data/graphNodes';
-import { audioEngine } from '../services/audioEngine';
+import { GraphNode, NodeCategory } from '../../types';
+import { INITIAL_GRAPH_NODES, CATEGORY_COLORS } from '../../data/graphNodes';
+import { audioEngine } from '../../services/audioEngine';
 import { 
   Search, 
   ZoomIn, 

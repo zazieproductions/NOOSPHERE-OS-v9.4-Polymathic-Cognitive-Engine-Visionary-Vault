@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
-import { VaultNote, NodeCategory } from '../types';
-import { VAULT_NOTES } from '../data/vaultNotes';
-import { audioEngine } from '../services/audioEngine';
+import { VaultNote, NodeCategory } from '../../types';
+import { VAULT_NOTES } from '../../data/vaultNotes';
+import { audioEngine } from '../../services/audioEngine';
 import { 
   Search, 
   BookOpen, 

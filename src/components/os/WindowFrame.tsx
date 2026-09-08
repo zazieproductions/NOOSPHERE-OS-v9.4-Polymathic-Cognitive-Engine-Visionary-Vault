@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { WindowState } from '../types';
-import { audioEngine } from '../services/audioEngine';
+import { WindowState } from '../../types';
+import { audioEngine } from '../../services/audioEngine';
 import { 
   Minus, 
   Square, 

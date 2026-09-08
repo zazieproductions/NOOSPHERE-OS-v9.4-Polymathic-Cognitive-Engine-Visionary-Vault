@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { CampaignMilestone } from '../types';
-import { CAMPAIGN_MILESTONES } from '../data/campaignMilestones';
-import { audioEngine } from '../services/audioEngine';
+import { CampaignMilestone } from '../../types';
+import { CAMPAIGN_MILESTONES } from '../../data/campaignMilestones';
+import { audioEngine } from '../../services/audioEngine';
 import { 
   GitBranch, 
   CheckCircle2, 

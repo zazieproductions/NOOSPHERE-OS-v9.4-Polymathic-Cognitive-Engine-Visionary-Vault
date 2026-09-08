@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { ChromaticPalette } from '../types';
-import { CHROMATIC_PALETTES } from '../data/palettes';
-import { audioEngine } from '../services/audioEngine';
+import { ChromaticPalette } from '../../types';
+import { CHROMATIC_PALETTES } from '../../data/palettes';
+import { audioEngine } from '../../services/audioEngine';
 import { 
   Palette, 
   Copy, 

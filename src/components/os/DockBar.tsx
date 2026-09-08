@@ -1,6 +1,6 @@
 import React from 'react';
-import { WindowId, WindowState } from '../types';
-import { audioEngine } from '../services/audioEngine';
+import { WindowId, WindowState } from '../../types';
+import { audioEngine } from '../../services/audioEngine';
 import { 
   Network, 
   BookOpen, 

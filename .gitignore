@@ -1,3 +1,17 @@
+# Dependencies
+node_modules
+.pnp
+.pnp.js
+
+# Build outputs
+dist
+dist-ssr
+build
+out
+.next
+.nuxt
+.output
+
 # Logs
 logs
 *.log
@@ -7,14 +21,10 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
-*.local
-
-# Editor directories and files
+# Editor & OS
 .vscode/*
 !.vscode/extensions.json
+!.vscode/settings.json
 .idea
 .DS_Store
 *.suo
@@ -22,5 +32,33 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+Thumbs.db
+
+# Env files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.local
+
+# Testing & coverage
+coverage
+.nyc_output
+junit.xml
+
+# TypeScript
+*.tsbuildinfo
+tsconfig.tsbuildinfo
+
+# Vite
+.vite
 .vite-source-tags.js
+
+# Misc
+.cache
+.parcel-cache
+.turbo
 .vercel
+.netlify
+*.tgz

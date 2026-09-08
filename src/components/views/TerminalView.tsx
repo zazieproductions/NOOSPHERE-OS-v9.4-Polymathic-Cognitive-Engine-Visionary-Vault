@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { audioEngine } from '../services/audioEngine';
-import { ORACLE_QUOTES } from '../data/oracleQuotes';
-import { Terminal as TerminalIcon, Sparkles } from 'lucide-react';
+import { audioEngine } from '../../services/audioEngine';
+import { ORACLE_QUOTES } from '../../data/oracleQuotes';
+import { Terminal as TerminalIcon } from 'lucide-react';
 
 interface TerminalLine {
   id: string;
@@ -30,14 +30,14 @@ export const TerminalView: React.FC = () => {
     audioEngine.playSynapticClick(1000);
     const newHistory: TerminalLine[] = [
       ...history,
-      { id: `${Date.now()}-in`, type: 'input', text: `$ ${cmd}` }
+      { id: `${Date.now()}-in`, type: 'input', text: `$ ${cmd}` },
     ];
 
     const parts = cmd.toLowerCase().split(' ');
     const mainCmd = parts[0];
 
     switch (mainCmd) {
-      case 'help':
+      case 'help': {
         newHistory.push({
           id: `${Date.now()}-out`,
           type: 'output',
@@ -50,12 +50,13 @@ export const TerminalView: React.FC = () => {
   scan-noosphere    - Scan collective digital mindshare for latent alpha
   matrix            - Stream raw green phosphor synaptic data
   clear             - Flush terminal output buffer
-  exit              - Minimize terminal window`
+  exit              - Minimize terminal window`,
         });
         break;
+      }
 
       case 'stats':
-      case 'status':
+      case 'status': {
         newHistory.push({
           id: `${Date.now()}-out`,
           type: 'success',
@@ -64,40 +65,44 @@ export const TerminalView: React.FC = () => {
   ├── Active Synaptic Nodes    : 84 Nodes / 192 Bi-directional Edges
   ├── Information Entropy (H)  : 0.96 bits/sym (Cliché rate: 0.00%)
   ├── Theta Wave Phase         : 6.0 Hz Solfeggio Coherence
-  └── Autopoietic Velocity     : 8.4x Compound Expansion`
+  └── Autopoietic Velocity     : 8.4x Compound Expansion`,
         });
         break;
+      }
 
-      case 'eureka':
+      case 'eureka': {
         audioEngine.playEurekaChord();
         newHistory.push({
           id: `${Date.now()}-out`,
           type: 'success',
-          text: `✨ [EUREKA TRANSMISSION]: "When you price at the 99th percentile and disqualify 94% of applicants, the purchase ceases to be a commercial exchange and becomes an alchemical transformation."`
+          text: `✨ [EUREKA TRANSMISSION]: "When you price at the 99th percentile and disqualify 94% of applicants, the purchase ceases to be a commercial exchange and becomes an alchemical transformation."`,
         });
         break;
+      }
 
-      case 'quote':
+      case 'quote': {
         const randomQuote = ORACLE_QUOTES[Math.floor(Math.random() * ORACLE_QUOTES.length)];
         newHistory.push({
           id: `${Date.now()}-out`,
           type: 'output',
           text: `[${randomQuote.polymath} // ${randomQuote.eraOrDiscipline}]:
 "${randomQuote.quote}"
-Tactical: ${randomQuote.tacticalRelevance}`
+Tactical: ${randomQuote.tacticalRelevance}`,
         });
         break;
+      }
 
-      case 'binaural':
+      case 'binaural': {
         const active = audioEngine.toggleThetaBinaural();
         newHistory.push({
           id: `${Date.now()}-out`,
           type: 'success',
-          text: `Theta Wave Binaural Beat (6Hz / 216Hz carrier) => ${active ? 'ONLINE (Generating Coherence)' : 'STANDBY'}`
+          text: `Theta Wave Binaural Beat (6Hz / 216Hz carrier) => ${active ? 'ONLINE (Generating Coherence)' : 'STANDBY'}`,
         });
         break;
+      }
 
-      case 'scan-noosphere':
+      case 'scan-noosphere': {
         audioEngine.playNodeBlip(1200);
         newHistory.push({
           id: `${Date.now()}-out`,
@@ -105,32 +110,36 @@ Tactical: ${randomQuote.tacticalRelevance}`
           text: `Scanning global semantic manifolds...
 [FOUND]: 3 high-entropy keyword clusters with 0.02% advertiser competition.
 [SIGNAL]: "Deleuzian B2B Retention" trending in Silicon Valley founder circles.
-[ALPHA]: Ready to deploy hyperstitional narrative seed.`
+[ALPHA]: Ready to deploy hyperstitional narrative seed.`,
         });
         break;
+      }
 
-      case 'matrix':
+      case 'matrix': {
         newHistory.push({
           id: `${Date.now()}-out`,
           type: 'output',
           text: `01001110 01001111 01001111 01010011 01010000 01001000 01000101 01010010 01000101
 Ψ(x,t) = Ae^(i(kx - ωt)) ─── [QUANTUM CONVERGENCE ACHIEVED]
-10101010 11110000 00001111 11001100 10101010 01010101 11111111`
+10101010 11110000 00001111 11001100 10101010 01010101 11111111`,
         });
         break;
+      }
 
-      case 'clear':
+      case 'clear': {
         setHistory([]);
         setInput('');
         return;
+      }
 
-      default:
+      default: {
         newHistory.push({
           id: `${Date.now()}-err`,
           type: 'error',
-          text: `Command not recognized: "${cmd}". Type "help" for valid subroutines.`
+          text: `Command not recognized: "${cmd}". Type "help" for valid subroutines.`,
         });
         break;
+      }
     }
 
     setHistory(newHistory);
@@ -139,7 +148,6 @@ Tactical: ${randomQuote.tacticalRelevance}`
 
   return (
     <div className="flex-1 flex flex-col h-full bg-[#030406] text-zinc-200 p-3 sm:p-4 font-mono text-xs overflow-hidden select-text">
-      {/* Terminal Title Bar */}
       <div className="flex items-center justify-between pb-2 mb-2 border-b border-zinc-800 text-[10px] text-zinc-500">
         <div className="flex items-center space-x-1.5 text-emerald-400">
           <TerminalIcon className="w-3.5 h-3.5" />
@@ -148,13 +156,13 @@ Tactical: ${randomQuote.tacticalRelevance}`
         <span>UTF-8 // SECURE CHANNEL</span>
       </div>
 
-      {/* Output Stream */}
       <div className="flex-1 overflow-y-auto space-y-1.5 font-mono text-[11px] leading-relaxed">
-        {history.map((line) => {
+        {history.map(line => {
           let style = 'text-zinc-300';
           if (line.type === 'input') style = 'text-emerald-400 font-bold';
           if (line.type === 'system') style = 'text-cyan-400';
-          if (line.type === 'success') style = 'text-emerald-300 bg-emerald-950/20 p-2 rounded border border-emerald-500/20';
+          if (line.type === 'success')
+            style = 'text-emerald-300 bg-emerald-950/20 p-2 rounded border border-emerald-500/20';
           if (line.type === 'error') style = 'text-rose-400';
 
           return (
@@ -166,13 +174,12 @@ Tactical: ${randomQuote.tacticalRelevance}`
         <div ref={bottomRef} />
       </div>
 
-      {/* Input Prompt */}
       <form onSubmit={handleCommand} className="mt-2 pt-2 border-t border-zinc-800/80 flex items-center gap-2">
         <span className="text-emerald-400 font-bold select-none">$</span>
         <input
           type="text"
           value={input}
-          onChange={(e) => {
+          onChange={e => {
             setInput(e.target.value);
             audioEngine.playSynapticClick(1400);
           }}
